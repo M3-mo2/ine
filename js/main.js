@@ -249,9 +249,9 @@ const Game = {
 
                     if (h < Terrain.waterLevel) {
                         ctx.fillStyle = 'rgba(20,60,120,0.8)';
-                    } else if (h < 30) {
+                    } else if (h < Terrain.waterLevel + 30) {
                         ctx.fillStyle = `rgb(40,${80 + h},30)`;
-                    } else if (h < 100) {
+                    } else if (h < Terrain.waterLevel + 100) {
                         ctx.fillStyle = `rgb(${60 + h / 2},${70 + h / 3},40)`;
                     } else {
                         ctx.fillStyle = `rgb(${120 + h / 3},${110 + h / 3},${100 + h / 3})`;
