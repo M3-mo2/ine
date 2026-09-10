@@ -169,7 +169,7 @@ const Renderer = {
         this.waterIndexCount = indices.length;
     },
 
-    renderSky(program, viewMatrix, projectionMatrix, sunDir, time, cloudDensity, fogColor) {
+    renderSky(program, viewMatrix, projectionMatrix, sunDir, time, cloudDensity, fogColor, sunColor) {
         const gl = this.gl;
 
         gl.depthMask(false);
@@ -180,7 +180,7 @@ const Renderer = {
         gl.uniformMatrix4fv(Renderer.getUniformLocation(program, 'uView'), false, viewMatrix);
         gl.uniform3fv(Renderer.getUniformLocation(program, 'uSunDir'), sunDir);
         gl.uniform3fv(Renderer.getUniformLocation(program, 'uSkyColor'), [0.4, 0.65, 0.95]);
-        gl.uniform3fv(Renderer.getUniformLocation(program, 'uSunColor'), [1.0, 0.95, 0.8]);
+        gl.uniform3fv(Renderer.getUniformLocation(program, 'uSunColor'), sunColor);
         gl.uniform1f(Renderer.getUniformLocation(program, 'uTime'), time);
         gl.uniform1f(Renderer.getUniformLocation(program, 'uCloudDensity'), cloudDensity);
         gl.uniform3fv(Renderer.getUniformLocation(program, 'uFogColor'), fogColor);
@@ -197,7 +197,7 @@ const Renderer = {
         gl.cullFace(gl.BACK);
     },
 
-    renderWater(program, viewMatrix, projectionMatrix, sunDir, time, cameraPos, fogColor, fogDensity) {
+    renderWater(program, viewMatrix, projectionMatrix, sunDir, time, cameraPos, fogColor, fogDensity, sunColor) {
         const gl = this.gl;
 
         gl.useProgram(program);
@@ -205,7 +205,7 @@ const Renderer = {
         gl.uniformMatrix4fv(Renderer.getUniformLocation(program, 'uView'), false, viewMatrix);
         gl.uniformMatrix4fv(Renderer.getUniformLocation(program, 'uModel'), false, Mat4.create());
         gl.uniform3fv(Renderer.getUniformLocation(program, 'uSunDir'), sunDir);
-        gl.uniform3fv(Renderer.getUniformLocation(program, 'uSunColor'), [1.0, 0.95, 0.8]);
+        gl.uniform3fv(Renderer.getUniformLocation(program, 'uSunColor'), sunColor);
         gl.uniform3fv(Renderer.getUniformLocation(program, 'uFogColor'), fogColor);
         gl.uniform1f(Renderer.getUniformLocation(program, 'uFogDensity'), fogDensity);
         gl.uniform3fv(Renderer.getUniformLocation(program, 'uCameraPos'), cameraPos);
@@ -227,6 +227,9 @@ const Renderer = {
     },
 
     particleBuffers: null,
+    particlePosArray: null,
+    particleSizeArray: null,
+    particleAlphaArray: null,
     particleCount: 0,
 
     renderParticles(program, particles, viewMatrix, projectionMatrix) {
@@ -239,35 +242,43 @@ const Renderer = {
         gl.uniformMatrix4fv(Renderer.getUniformLocation(program, 'uProjection'), false, projectionMatrix);
         gl.uniformMatrix4fv(Renderer.getUniformLocation(program, 'uView'), false, viewMatrix);
 
-        const positions = [];
-        const sizes = [];
-        const alphas = [];
+        const count = particles.length;
+        const needed = count * 3;
 
-        for (const p of particles) {
-            positions.push(p.position.x, p.position.y, p.position.z);
-            sizes.push(p.size || 1);
-            alphas.push(Math.min(1, p.life));
+        if (!this.particlePosArray || this.particlePosArray.length < needed) {
+            this.particlePosArray = new Float32Array(needed);
+            this.particleSizeArray = new Float32Array(count);
+            this.particleAlphaArray = new Float32Array(count);
         }
 
-        if (!this.particleBuffers || this.particleCount !== particles.length) {
+        for (let i = 0, j = 0; i < count; i++) {
+            const p = particles[i];
+            this.particlePosArray[j++] = p.position.x;
+            this.particlePosArray[j++] = p.position.y;
+            this.particlePosArray[j++] = p.position.z;
+            this.particleSizeArray[i] = p.size || 1;
+            this.particleAlphaArray[i] = Math.min(1, p.life);
+        }
+
+        if (!this.particleBuffers || this.particleCount !== count) {
             if (this.particleBuffers) {
                 gl.deleteBuffer(this.particleBuffers.pos);
                 gl.deleteBuffer(this.particleBuffers.size);
                 gl.deleteBuffer(this.particleBuffers.alpha);
             }
             this.particleBuffers = {
-                pos: this.createBuffer(new Float32Array(positions)),
-                size: this.createBuffer(new Float32Array(sizes)),
-                alpha: this.createBuffer(new Float32Array(alphas))
+                pos: this.createBuffer(this.particlePosArray.subarray(0, needed)),
+                size: this.createBuffer(this.particleSizeArray.subarray(0, count)),
+                alpha: this.createBuffer(this.particleAlphaArray.subarray(0, count))
             };
-            this.particleCount = particles.length;
+            this.particleCount = count;
         } else {
             gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffers.pos);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, this.particlePosArray.subarray(0, needed), gl.DYNAMIC_DRAW);
             gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffers.size);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sizes), gl.DYNAMIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, this.particleSizeArray.subarray(0, count), gl.DYNAMIC_DRAW);
             gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffers.alpha);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(alphas), gl.DYNAMIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, this.particleAlphaArray.subarray(0, count), gl.DYNAMIC_DRAW);
         }
 
         const aPosition = Renderer.getAttribLocation(program, 'aPosition');

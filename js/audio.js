@@ -127,5 +127,24 @@ const AudioEngine = {
         if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume();
         }
+    },
+
+    destroy() {
+        if (this.engineOsc) {
+            this.engineOsc.osc1.stop();
+            this.engineOsc.osc2.stop();
+            this.engineOsc.osc3.stop();
+            this.engineOsc.lfo.stop();
+            this.engineOsc = null;
+        }
+        if (this.windNode) {
+            this.windNode.noise.stop();
+            this.windNode = null;
+        }
+        if (this.ctx) {
+            this.ctx.close();
+            this.ctx = null;
+        }
+        this.initialized = false;
     }
 };

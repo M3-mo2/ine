@@ -166,6 +166,8 @@ const Game = {
         Camera.update(dt);
 
         AudioEngine.update(state);
+
+        Input.resetMouse();
     },
 
     render() {
@@ -184,7 +186,7 @@ const Game = {
 
         Renderer.renderSky(
             this.skyProgram, viewMatrix, projectionMatrix,
-            sunDir, Atmosphere.time, Atmosphere.cloudDensity, finalFogColor
+            sunDir, Atmosphere.time, Atmosphere.cloudDensity, finalFogColor, Atmosphere.sunColor
         );
 
         gl.useProgram(this.terrainProgram);
@@ -205,7 +207,7 @@ const Game = {
         gl.useProgram(this.waterProgram);
         Renderer.renderWater(
             this.waterProgram, viewMatrix, projectionMatrix,
-            sunDir, Atmosphere.time, cameraPos, finalFogColor, fogDensity
+            sunDir, Atmosphere.time, cameraPos, finalFogColor, fogDensity, Atmosphere.sunColor
         );
 
         if (Weather.particles.length > 0 && this.particleProgram) {
@@ -299,9 +301,7 @@ const Game = {
         this.state = 'menu';
         document.getElementById('pause-overlay').style.display = 'none';
         document.getElementById('menu-screen').style.display = 'flex';
-        if (AudioEngine.ctx) {
-            AudioEngine.ctx.suspend();
-        }
+        AudioEngine.destroy();
     }
 };
 

@@ -1,5 +1,7 @@
 const ShaderSource = {
     terrainVertex: `
+        precision highp float;
+
         attribute vec3 aPosition;
         attribute vec3 aNormal;
         attribute vec2 aTexCoord;
@@ -80,6 +82,8 @@ const ShaderSource = {
     `,
 
     waterVertex: `
+        precision highp float;
+
         attribute vec3 aPosition;
         attribute vec2 aTexCoord;
 
@@ -154,6 +158,8 @@ const ShaderSource = {
     `,
 
     skyVertex: `
+        precision highp float;
+
         attribute vec3 aPosition;
         uniform mat4 uProjection;
         uniform mat4 uView;
@@ -240,60 +246,9 @@ const ShaderSource = {
         }
     `,
 
-    objectVertex: `
-        attribute vec3 aPosition;
-        attribute vec3 aNormal;
-
-        uniform mat4 uProjection;
-        uniform mat4 uView;
-        uniform mat4 uModel;
-        uniform vec3 uColor;
-
-        varying vec3 vColor;
-        varying vec3 vNormal;
-        varying vec3 vWorldPos;
-
-        void main() {
-            vec4 worldPos = uModel * vec4(aPosition, 1.0);
-            vWorldPos = worldPos.xyz;
-            vColor = uColor;
-            vNormal = mat3(uModel) * aNormal;
-            gl_Position = uProjection * uView * worldPos;
-        }
-    `,
-
-    objectFragment: `
+    particleVertex: `
         precision highp float;
 
-        varying vec3 vColor;
-        varying vec3 vNormal;
-        varying vec3 vWorldPos;
-
-        uniform vec3 uSunDir;
-        uniform vec3 uSunColor;
-        uniform vec3 uAmbientColor;
-        uniform vec3 uFogColor;
-        uniform float uFogDensity;
-        uniform vec3 uCameraPos;
-
-        void main() {
-            vec3 normal = normalize(vNormal);
-            float ndotl = max(dot(normal, normalize(uSunDir)), 0.0);
-
-            vec3 diffuse = vColor * uSunColor * ndotl;
-            vec3 ambient = vColor * uAmbientColor;
-            vec3 finalColor = ambient + diffuse;
-
-            float dist = length(vWorldPos - uCameraPos);
-            float fog = 1.0 - exp(-uFogDensity * dist * dist);
-            fog = clamp(fog, 0.0, 1.0);
-            finalColor = mix(finalColor, uFogColor, fog);
-
-            gl_FragColor = vec4(finalColor, 1.0);
-        }
-    `,
-
-    particleVertex: `
         attribute vec3 aPosition;
         attribute float aSize;
         attribute float aAlpha;
@@ -307,7 +262,7 @@ const ShaderSource = {
             vAlpha = aAlpha;
             vec4 viewPos = uView * vec4(aPosition, 1.0);
             gl_Position = uProjection * viewPos;
-            gl_PointSize = aSize * 300.0 / -viewPos.z;
+            gl_PointSize = aSize * 300.0 / max(-viewPos.z, 0.001);
         }
     `,
 
