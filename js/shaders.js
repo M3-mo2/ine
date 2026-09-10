@@ -52,17 +52,17 @@ const ShaderSource = {
             } else if (h < uWaterLevel + 8.0) {
                 float t = (h - uWaterLevel - 0.5) / 7.5;
                 color = mix(vec3(0.15, 0.35, 0.25), vec3(0.2, 0.5, 0.15), t);
-            } else if (h < 60.0) {
-                float t = (h - 8.0) / 52.0;
+            } else if (h < uWaterLevel + 60.0) {
+                float t = (h - uWaterLevel - 8.0) / 52.0;
                 color = mix(vec3(0.2, 0.5, 0.15), vec3(0.35, 0.45, 0.2), t);
-            } else if (h < 120.0) {
-                float t = (h - 60.0) / 60.0;
+            } else if (h < uWaterLevel + 120.0) {
+                float t = (h - uWaterLevel - 60.0) / 60.0;
                 color = mix(vec3(0.35, 0.45, 0.2), vec3(0.45, 0.4, 0.3), t);
-            } else if (h < 200.0) {
-                float t = (h - 120.0) / 80.0;
+            } else if (h < uWaterLevel + 200.0) {
+                float t = (h - uWaterLevel - 120.0) / 80.0;
                 color = mix(vec3(0.45, 0.4, 0.3), vec3(0.6, 0.55, 0.5), t);
             } else {
-                float t = min((h - 200.0) / 80.0, 1.0);
+                float t = min((h - uWaterLevel - 200.0) / 80.0, 1.0);
                 color = mix(vec3(0.6, 0.55, 0.5), vec3(0.95, 0.95, 0.98), t);
             }
 
