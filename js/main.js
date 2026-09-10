@@ -40,6 +40,10 @@ const Game = {
             throw new Error('Failed to compile one or more shader programs');
         }
 
+        this.updateLoadingBar(35, 'Initializing terrain worker...');
+        Terrain.init();
+        await this.sleep(50);
+
         this.updateLoadingBar(40, 'Generating terrain...');
         await this.sleep(100);
         Terrain.update(0, 0);

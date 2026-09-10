@@ -5,7 +5,67 @@ const Terrain = {
     waterLevel: 0,
 
     chunks: new Map(),
-   VAO: null,
+    pendingChunks: new Set(),
+    pendingBatch: [],
+    worker: null,
+    batchTimeout: null,
+    BATCH_DELAY: 16,
+    MAX_CHUNKS_PER_FRAME: 3,
+
+    init() {
+        this.worker = new Worker('js/terrain-worker.js');
+        this.worker.onmessage = (e) => this.onWorkerMessage(e);
+        this.worker.onerror = (e) => console.error('Terrain worker error:', e);
+    },
+
+    onWorkerMessage(e) {
+        const { type, results } = e.data;
+        if (type === 'generated') {
+            for (const data of results) {
+                this.createChunkFromData(data);
+            }
+        }
+    },
+
+    createChunkFromData(data) {
+        const { cx, cz, vertices, normals, texCoords, indices, indexCount } = data;
+        const key = `${cx},${cz}`;
+
+        this.pendingChunks.delete(key);
+
+        const chunk = {
+            cx, cz,
+            vertexBuffer: Renderer.createBuffer(vertices),
+            normalBuffer: Renderer.createBuffer(normals),
+            texCoordBuffer: Renderer.createBuffer(texCoords),
+            indexBuffer: Renderer.createIndexBuffer(indices),
+            indexCount,
+            vao: null,
+            ready: true
+        };
+
+        this.chunks.set(key, chunk);
+    },
+
+    queueChunk(cx, cz) {
+        const key = `${cx},${cz}`;
+        if (this.chunks.has(key) || this.pendingChunks.has(key)) return;
+
+        this.pendingChunks.add(key);
+        this.pendingBatch.push({ cx, cz });
+
+        if (!this.batchTimeout) {
+            this.batchTimeout = setTimeout(() => this.flushBatch(), this.BATCH_DELAY);
+        }
+    },
+
+    flushBatch() {
+        this.batchTimeout = null;
+        if (this.pendingBatch.length === 0) return;
+
+        const batch = this.pendingBatch.splice(0, 20);
+        this.worker.postMessage({ type: 'generate', chunks: batch });
+    },
 
     getHeight(worldX, worldZ) {
         const scale = 0.003;
@@ -33,7 +93,7 @@ const Terrain = {
         return Vec3.normalize({ x: hL - hR, y: 2 * size, z: hD - hU });
     },
 
-    generateChunk(cx, cz) {
+    generateChunkSync(cx, cz) {
         const key = `${cx},${cz}`;
         if (this.chunks.has(key)) return this.chunks.get(key);
 
@@ -74,7 +134,8 @@ const Terrain = {
             texCoordBuffer: null,
             indexBuffer: null,
             indexCount: indices.length,
-            vao: null
+            vao: null,
+            ready: true
         };
 
         chunk.vertexBuffer = Renderer.createBuffer(new Float32Array(vertices));
@@ -108,9 +169,24 @@ const Terrain = {
             }
         }
 
+        for (const key of this.pendingChunks) {
+            if (!needed.has(key)) {
+                this.pendingChunks.delete(key);
+            }
+        }
+
+        let queued = 0;
         for (let dz = -this.VIEW_DISTANCE; dz <= this.VIEW_DISTANCE; dz++) {
             for (let dx = -this.VIEW_DISTANCE; dx <= this.VIEW_DISTANCE; dx++) {
-                this.generateChunk(cx + dx, cz + dz);
+                const key = `${cx + dx},${cz + dz}`;
+                if (!this.chunks.has(key) && !this.pendingChunks.has(key)) {
+                    if (queued < this.MAX_CHUNKS_PER_FRAME) {
+                        this.generateChunkSync(cx + dx, cz + dz);
+                        queued++;
+                    } else {
+                        this.queueChunk(cx + dx, cz + dz);
+                    }
+                }
             }
         }
     },
@@ -123,6 +199,8 @@ const Terrain = {
         const aTexCoord = Renderer.getAttribLocation(program, 'aTexCoord');
 
         for (const chunk of this.chunks.values()) {
+            if (!chunk.ready) continue;
+
             gl.bindBuffer(gl.ARRAY_BUFFER, chunk.vertexBuffer);
             gl.enableVertexAttribArray(aPosition);
             gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
