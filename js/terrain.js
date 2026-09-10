@@ -1,4 +1,8 @@
-const Terrain = {
+import { Vec3 } from './math3d.js';
+import { Noise } from './noise.js';
+import { Renderer } from './renderer.js';
+
+export const Terrain = {
     CHUNK_SIZE: 256,
     CHUNK_RESOLUTION: 128,
     VIEW_DISTANCE: 5,
@@ -13,7 +17,7 @@ const Terrain = {
     MAX_CHUNKS_PER_FRAME: 3,
 
     init() {
-        this.worker = new Worker('js/terrain-worker.js');
+        this.worker = new Worker(new URL('./terrain-worker.js', import.meta.url), { type: 'module' });
         this.worker.onmessage = (e) => this.onWorkerMessage(e);
         this.worker.onerror = (e) => console.error('Terrain worker error:', e);
     },

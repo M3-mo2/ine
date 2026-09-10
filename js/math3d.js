@@ -1,4 +1,4 @@
-const Vec3 = {
+export const Vec3 = {
     create(x = 0, y = 0, z = 0) {
         return { x, y, z };
     },
@@ -66,7 +66,7 @@ const Vec3 = {
     }
 };
 
-const Mat4 = {
+export const Mat4 = {
     create() {
         return new Float32Array([
             1, 0, 0, 0,

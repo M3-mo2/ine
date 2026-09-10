@@ -1,4 +1,4 @@
-const AudioEngine = {
+export const AudioEngine = {
     ctx: null,
     engineNode: null,
     windNode: null,

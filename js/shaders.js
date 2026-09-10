@@ -1,4 +1,4 @@
-const ShaderSource = {
+export const ShaderSource = {
     terrainVertex: `
         attribute vec3 aPosition;
         attribute vec3 aNormal;

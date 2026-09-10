@@ -1,4 +1,4 @@
-const Noise = {
+export const Noise = {
     permutation: null,
 
     init(seed = 42) {

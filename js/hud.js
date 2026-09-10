@@ -1,4 +1,4 @@
-const HUD = {
+export const HUD = {
     canvas: null,
     ctx: null,
 

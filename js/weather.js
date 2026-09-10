@@ -1,4 +1,6 @@
-const Weather = {
+import { Vec3 } from './math3d.js';
+
+export const Weather = {
     current: 'clear',
     particles: [],
     lightning: { active: false, timer: 0, flash: 0 },

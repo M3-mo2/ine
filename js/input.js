@@ -1,7 +1,14 @@
-const Input = {
+import { Vec3 } from './math3d.js';
+import { Aircraft } from './aircraft.js';
+import { Camera } from './camera.js';
+import { Renderer } from './renderer.js';
+
+export const Input = {
     keys: {},
     mouse: { x: 0, y: 0, dx: 0, dy: 0 },
     initialized: false,
+    _getState: null,
+    _togglePause: null,
 
     simKeys: new Set([
         'Escape', 'KeyW', 'KeyA', 'KeyS', 'KeyD',
@@ -12,15 +19,17 @@ const Input = {
         'Equal', 'NumpadAdd', 'Minus', 'NumpadSubtract'
     ]),
 
-    init() {
+    init(getState, togglePause) {
         if (this.initialized) return;
         this.initialized = true;
+        this._getState = getState;
+        this._togglePause = togglePause;
 
         document.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
             if (e.code === 'Escape') {
-                if (Game.state === 'flying') {
-                    Game.togglePause();
+                if (this._getState() === 'flying') {
+                    this._togglePause();
                 }
             }
             if (e.code === 'KeyR' && Aircraft.state && Aircraft.state.crashed) {
@@ -38,9 +47,6 @@ const Input = {
 
         document.addEventListener('keyup', (e) => {
             this.keys[e.code] = false;
-            if (this.simKeys.has(e.code)) {
-                e.preventDefault();
-            }
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -51,7 +57,7 @@ const Input = {
         });
 
         document.addEventListener('mousedown', (e) => {
-            if (Game.state === 'flying' && !document.pointerLockElement) {
+            if (this._getState() === 'flying' && !document.pointerLockElement) {
                 Renderer.canvas.requestPointerLock();
             }
         });

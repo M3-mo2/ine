@@ -1,4 +1,8 @@
-const Camera = {
+import { Vec3, Mat4 } from './math3d.js';
+import { Aircraft } from './aircraft.js';
+import { Renderer } from './renderer.js';
+
+export const Camera = {
     position: Vec3.create(0, 200, -10),
     target: Vec3.create(0, 200, 0),
     up: Vec3.create(0, 1, 0),

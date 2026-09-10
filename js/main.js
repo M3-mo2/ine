@@ -1,3 +1,16 @@
+import { Mat4 } from './math3d.js';
+import { ShaderSource } from './shaders.js';
+import { Renderer } from './renderer.js';
+import { Terrain } from './terrain.js';
+import { Aircraft } from './aircraft.js';
+import { Camera } from './camera.js';
+import { Input } from './input.js';
+import { Physics } from './physics.js';
+import { Weather } from './weather.js';
+import { Atmosphere } from './atmosphere.js';
+import { AudioEngine } from './audio.js';
+import { HUD } from './hud.js';
+
 const Game = {
     state: 'loading',
     selectedAircraft: 'cessna',
@@ -52,13 +65,17 @@ const Game = {
         Renderer.createSkybox();
 
         this.updateLoadingBar(70, 'Creating water...');
-        Renderer.createWaterPlane();
+        const waterSize = Terrain.CHUNK_SIZE * (Terrain.VIEW_DISTANCE + 1) * 2;
+        Renderer.createWaterPlane(Terrain.waterLevel, waterSize);
 
         this.updateLoadingBar(80, 'Initializing HUD...');
         HUD.init();
 
         this.updateLoadingBar(90, 'Setting up controls...');
-        Input.init();
+        Input.init(
+            () => this.state,
+            () => this.togglePause()
+        );
         Camera.init();
         Atmosphere.init();
 
@@ -312,9 +329,7 @@ const Game = {
     }
 };
 
-window.addEventListener('load', () => {
-    Game.init().catch(err => {
-        console.error('Failed to initialize:', err);
-        document.getElementById('loading-text').textContent = 'Error: ' + err.message;
-    });
+Game.init().catch(err => {
+    console.error('Failed to initialize:', err);
+    document.getElementById('loading-text').textContent = 'Error: ' + err.message;
 });

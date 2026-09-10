@@ -1,4 +1,6 @@
-const Aircraft = {
+import { Vec3, Mat4 } from './math3d.js';
+
+export const Aircraft = {
     configs: {
         cessna: {
             name: 'CESSNA 172',

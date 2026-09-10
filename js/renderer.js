@@ -1,4 +1,6 @@
-const Renderer = {
+import { Mat4 } from './math3d.js';
+
+export const Renderer = {
     gl: null,
     canvas: null,
     width: 0,
@@ -135,8 +137,8 @@ const Renderer = {
         this.skyIndexBuffer = this.createIndexBuffer(indices);
     },
 
-    createWaterPlane() {
-        const size = Terrain.CHUNK_SIZE * (Terrain.VIEW_DISTANCE + 1) * 2;
+    createWaterPlane(waterLevel, totalSize) {
+        const size = totalSize;
         const res = 64;
         const step = size / res;
 
@@ -148,7 +150,7 @@ const Renderer = {
             for (let x = 0; x <= res; x++) {
                 vertices.push(
                     -size / 2 + x * step,
-                    Terrain.waterLevel,
+                    waterLevel,
                     -size / 2 + z * step
                 );
                 texCoords.push(x / res * 10, z / res * 10);

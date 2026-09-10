@@ -1,4 +1,7 @@
-const Physics = {
+import { Vec3 } from './math3d.js';
+import { Terrain } from './terrain.js';
+
+export const Physics = {
     gravity: 9.81,
     airDensity: 1.225,
 

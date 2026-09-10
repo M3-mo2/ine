@@ -1,4 +1,4 @@
-const Atmosphere = {
+export const Atmosphere = {
     time: 0,
     sunAngle: 0.8,
     sunDir: [0, 1, 0],
