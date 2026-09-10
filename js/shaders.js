@@ -163,9 +163,9 @@ const ShaderSource = {
         void main() {
             vPosition = aPosition;
             mat4 viewNoTranslation = uView;
-            viewNoTranslation[12] = 0.0;
-            viewNoTranslation[13] = 0.0;
-            viewNoTranslation[14] = 0.0;
+            viewNoTranslation[3][0] = 0.0;
+            viewNoTranslation[3][1] = 0.0;
+            viewNoTranslation[3][2] = 0.0;
             gl_Position = (uProjection * viewNoTranslation * vec4(aPosition, 1.0)).xyww;
         }
     `,
