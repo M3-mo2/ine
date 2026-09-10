@@ -36,7 +36,7 @@ const Game = {
             ShaderSource.particleFragment
         );
 
-        if (!this.terrainProgram || !this.waterProgram || !this.skyProgram) {
+        if (!this.terrainProgram || !this.waterProgram || !this.skyProgram || !this.particleProgram) {
             throw new Error('Failed to compile one or more shader programs');
         }
 
@@ -182,9 +182,6 @@ const Game = {
 
         Renderer.clear(finalFogColor);
 
-        gl.useProgram(this.skyProgram);
-        gl.uniformMatrix4fv(Renderer.getUniformLocation(this.skyProgram, 'uProjection'), false, projectionMatrix);
-        gl.uniformMatrix4fv(Renderer.getUniformLocation(this.skyProgram, 'uView'), false, viewMatrix);
         Renderer.renderSky(
             this.skyProgram, viewMatrix, projectionMatrix,
             sunDir, Atmosphere.time, Atmosphere.cloudDensity, finalFogColor
