@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Simulator X</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h1>FLIGHT SIMULATOR X</h1>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+            <p id="loading-text">Initializing systems...</p>
+        </div>
+    </div>
+
+    <div id="menu-screen" style="display:none;">
+        <div class="menu-content">
+            <h1>FLIGHT SIMULATOR X</h1>
+            <div class="menu-options">
+                <button class="menu-btn" id="btn-free-flight">FREE FLIGHT</button>
+                <button class="menu-btn" id="btn-landing-challenge">LANDING CHALLENGE</button>
+                <button class="menu-btn" id="btn-circuit">CIRCUIT PATTERN</button>
+                <button class="menu-btn" id="btn-settings">SETTINGS</button>
+            </div>
+            <div class="aircraft-select">
+                <h3>SELECT AIRCRAFT</h3>
+                <div class="aircraft-options">
+                    <button class="aircraft-btn active" data-aircraft="cessna">CESSNA 172</button>
+                    <button class="aircraft-btn" data-aircraft="f16">F-16 FIGHTER</button>
+                    <button class="aircraft-btn" data-aircraft="boeing">BOEING 747</button>
+                </div>
+            </div>
+            <div class="weather-select">
+                <h3>WEATHER</h3>
+                <div class="weather-options">
+                    <button class="weather-btn active" data-weather="clear">CLEAR</button>
+                    <button class="weather-btn" data-weather="cloudy">CLOUDY</button>
+                    <button class="weather-btn" data-weather="storm">STORM</button>
+                    <button class="weather-btn" data-weather="fog">FOG</button>
+                </div>
+            </div>
+            <p class="controls-hint">Click to start | WASD: Throttle/Steer | Q/E: Rudder | Space: Flaps | Shift/Ctrl: Pitch</p>
+        </div>
+    </div>
+
+    <canvas id="gl-canvas"></canvas>
+    <canvas id="hud-canvas"></canvas>
+
+    <div id="pause-overlay" style="display:none;">
+        <div class="pause-content">
+            <h2>PAUSED</h2>
+            <p>Press ESC to resume</p>
+            <button class="menu-btn" id="btn-resume">RESUME</button>
+            <button class="menu-btn" id="btn-quit">QUIT TO MENU</button>
+        </div>
+    </div>
+
+    <div id="minimap-container">
+        <canvas id="minimap-canvas" width="200" height="200"></canvas>
+    </div>
+
+    <div id="fps-counter">FPS: 0</div>
+
+    <script src="js/math3d.js"></script>
+    <script src="js/noise.js"></script>
+    <script src="js/shaders.js"></script>
+    <script src="js/terrain.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/physics.js"></script>
+    <script src="js/aircraft.js"></script>
+    <script src="js/atmosphere.js"></script>
+    <script src="js/hud.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
