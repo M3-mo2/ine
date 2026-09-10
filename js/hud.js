@@ -290,7 +290,7 @@ const HUD = {
                 ctx.font = '9px monospace';
                 ctx.textAlign = 'center';
                 const labels = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' };
-                ctx.fillText(labels[deg] || (deg / 10).toString(), x, height / 2 - 5);
+                ctx.fillText(labels[deg] || deg.toString(), x, height / 2 - 5);
             } else {
                 ctx.strokeStyle = 'rgba(255,255,255,0.3)';
                 ctx.beginPath();

@@ -45,8 +45,9 @@ const Weather = {
 
         this.wind.x += (Math.random() - 0.5) * dt * 2;
         this.wind.z += (Math.random() - 0.5) * dt * 2;
-        this.wind.x *= 0.99;
-        this.wind.z *= 0.99;
+        const damping = Math.pow(0.99, dt * 60);
+        this.wind.x *= damping;
+        this.wind.z *= damping;
     },
 
     updateStorm(dt, cameraPos) {

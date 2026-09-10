@@ -3,6 +3,15 @@ const Input = {
     mouse: { x: 0, y: 0, dx: 0, dy: 0 },
     initialized: false,
 
+    simKeys: new Set([
+        'Escape', 'KeyW', 'KeyA', 'KeyS', 'KeyD',
+        'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+        'KeyQ', 'KeyE', 'KeyR', 'KeyV', 'KeyG', 'KeyB',
+        'Space', 'ShiftLeft', 'ShiftRight',
+        'ControlLeft', 'ControlRight',
+        'Equal', 'NumpadAdd', 'Minus', 'NumpadSubtract'
+    ]),
+
     init() {
         if (this.initialized) return;
         this.initialized = true;
@@ -22,12 +31,16 @@ const Input = {
             if (e.code === 'KeyV') {
                 Camera.toggleView();
             }
-            e.preventDefault();
+            if (this.simKeys.has(e.code)) {
+                e.preventDefault();
+            }
         });
 
         document.addEventListener('keyup', (e) => {
             this.keys[e.code] = false;
-            e.preventDefault();
+            if (this.simKeys.has(e.code)) {
+                e.preventDefault();
+            }
         });
 
         document.addEventListener('mousemove', (e) => {

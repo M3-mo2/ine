@@ -118,9 +118,9 @@ const Terrain = {
     render(program) {
         const gl = Renderer.gl;
 
-        const aPosition = gl.getAttribLocation(program, 'aPosition');
-        const aNormal = gl.getAttribLocation(program, 'aNormal');
-        const aTexCoord = gl.getAttribLocation(program, 'aTexCoord');
+        const aPosition = Renderer.getAttribLocation(program, 'aPosition');
+        const aNormal = Renderer.getAttribLocation(program, 'aNormal');
+        const aTexCoord = Renderer.getAttribLocation(program, 'aTexCoord');
 
         for (const chunk of this.chunks.values()) {
             gl.bindBuffer(gl.ARRAY_BUFFER, chunk.vertexBuffer);

@@ -7,6 +7,7 @@ const Game = {
     fps: 0,
     frameCount: 0,
     fpsTimer: 0,
+    minimapFrame: 0,
 
     terrainProgram: null,
     waterProgram: null,
@@ -34,6 +35,10 @@ const Game = {
             ShaderSource.particleVertex,
             ShaderSource.particleFragment
         );
+
+        if (!this.terrainProgram || !this.waterProgram || !this.skyProgram) {
+            throw new Error('Failed to compile one or more shader programs');
+        }
 
         this.updateLoadingBar(40, 'Generating terrain...');
         await this.sleep(100);
@@ -104,8 +109,8 @@ const Game = {
         document.getElementById('menu-screen').style.display = 'none';
         document.getElementById('pause-overlay').style.display = 'none';
 
-        Audio.init();
-        Audio.resume();
+        AudioEngine.init();
+        AudioEngine.resume();
 
         this.lastTime = performance.now();
         requestAnimationFrame((t) => this.gameLoop(t));
@@ -153,14 +158,14 @@ const Game = {
 
         state.brake = Input.isBrake();
 
-        Physics.update(state, dt);
+        Physics.update(Aircraft, dt);
 
         Terrain.update(state.position.x, state.position.z);
         Weather.update(dt, state.position);
         Atmosphere.update(dt, this.selectedWeather);
         Camera.update(dt);
 
-        Audio.update(state);
+        AudioEngine.update(state);
     },
 
     render() {
@@ -178,25 +183,25 @@ const Game = {
         Renderer.clear(finalFogColor);
 
         gl.useProgram(this.skyProgram);
-        gl.uniformMatrix4fv(gl.getUniformLocation(this.skyProgram, 'uProjection'), false, projectionMatrix);
-        gl.uniformMatrix4fv(gl.getUniformLocation(this.skyProgram, 'uView'), false, viewMatrix);
+        gl.uniformMatrix4fv(Renderer.getUniformLocation(this.skyProgram, 'uProjection'), false, projectionMatrix);
+        gl.uniformMatrix4fv(Renderer.getUniformLocation(this.skyProgram, 'uView'), false, viewMatrix);
         Renderer.renderSky(
             this.skyProgram, viewMatrix, projectionMatrix,
             sunDir, Atmosphere.time, Atmosphere.cloudDensity, finalFogColor
         );
 
         gl.useProgram(this.terrainProgram);
-        gl.uniformMatrix4fv(gl.getUniformLocation(this.terrainProgram, 'uProjection'), false, projectionMatrix);
-        gl.uniformMatrix4fv(gl.getUniformLocation(this.terrainProgram, 'uView'), false, viewMatrix);
-        gl.uniformMatrix4fv(gl.getUniformLocation(this.terrainProgram, 'uModel'), false, Mat4.create());
-        gl.uniform3fv(gl.getUniformLocation(this.terrainProgram, 'uSunDir'), sunDir);
-        gl.uniform3fv(gl.getUniformLocation(this.terrainProgram, 'uSunColor'), Atmosphere.sunColor);
-        gl.uniform3fv(gl.getUniformLocation(this.terrainProgram, 'uAmbientColor'), Atmosphere.ambientColor);
-        gl.uniform3fv(gl.getUniformLocation(this.terrainProgram, 'uFogColor'), finalFogColor);
-        gl.uniform1f(gl.getUniformLocation(this.terrainProgram, 'uFogDensity'), fogDensity);
-        gl.uniform1f(gl.getUniformLocation(this.terrainProgram, 'uTime'), Atmosphere.time);
-        gl.uniform3fv(gl.getUniformLocation(this.terrainProgram, 'uCameraPos'), cameraPos);
-        gl.uniform1f(gl.getUniformLocation(this.terrainProgram, 'uWaterLevel'), Terrain.waterLevel);
+        gl.uniformMatrix4fv(Renderer.getUniformLocation(this.terrainProgram, 'uProjection'), false, projectionMatrix);
+        gl.uniformMatrix4fv(Renderer.getUniformLocation(this.terrainProgram, 'uView'), false, viewMatrix);
+        gl.uniformMatrix4fv(Renderer.getUniformLocation(this.terrainProgram, 'uModel'), false, Mat4.create());
+        gl.uniform3fv(Renderer.getUniformLocation(this.terrainProgram, 'uSunDir'), sunDir);
+        gl.uniform3fv(Renderer.getUniformLocation(this.terrainProgram, 'uSunColor'), Atmosphere.sunColor);
+        gl.uniform3fv(Renderer.getUniformLocation(this.terrainProgram, 'uAmbientColor'), Atmosphere.ambientColor);
+        gl.uniform3fv(Renderer.getUniformLocation(this.terrainProgram, 'uFogColor'), finalFogColor);
+        gl.uniform1f(Renderer.getUniformLocation(this.terrainProgram, 'uFogDensity'), fogDensity);
+        gl.uniform1f(Renderer.getUniformLocation(this.terrainProgram, 'uTime'), Atmosphere.time);
+        gl.uniform3fv(Renderer.getUniformLocation(this.terrainProgram, 'uCameraPos'), cameraPos);
+        gl.uniform1f(Renderer.getUniformLocation(this.terrainProgram, 'uWaterLevel'), Terrain.waterLevel);
 
         Terrain.render(this.terrainProgram);
 
@@ -218,36 +223,48 @@ const Game = {
         HUD.drawHUD(Aircraft.state);
     },
 
+    minimapCache: null,
+    minimapLastPx: 0,
+    minimapLastPz: 0,
+
     renderMinimap() {
+        this.minimapFrame++;
         const canvas = document.getElementById('minimap-canvas');
         const ctx = canvas.getContext('2d');
         const size = 200;
         const scale = 0.1;
 
-        ctx.fillStyle = 'rgba(0,20,40,0.9)';
-        ctx.fillRect(0, 0, size, size);
-
         const px = Aircraft.state.position.x;
         const pz = Aircraft.state.position.z;
         const heading = Aircraft.state.heading;
 
-        for (let y = 0; y < size; y += 4) {
-            for (let x = 0; x < size; x += 4) {
-                const wx = px + (x - size / 2) / scale;
-                const wz = pz + (y - size / 2) / scale;
-                const h = Terrain.getHeight(wx, wz);
+        if (!this.minimapCache || this.minimapFrame % 5 === 0 || Math.abs(px - this.minimapLastPx) > 5 || Math.abs(pz - this.minimapLastPz) > 5) {
+            ctx.fillStyle = 'rgba(0,20,40,0.9)';
+            ctx.fillRect(0, 0, size, size);
 
-                if (h < Terrain.waterLevel) {
-                    ctx.fillStyle = 'rgba(20,60,120,0.8)';
-                } else if (h < 30) {
-                    ctx.fillStyle = `rgb(40,${80 + h},30)`;
-                } else if (h < 100) {
-                    ctx.fillStyle = `rgb(${60 + h / 2},${70 + h / 3},40)`;
-                } else {
-                    ctx.fillStyle = `rgb(${120 + h / 3},${110 + h / 3},${100 + h / 3})`;
+            for (let y = 0; y < size; y += 4) {
+                for (let x = 0; x < size; x += 4) {
+                    const wx = px + (x - size / 2) / scale;
+                    const wz = pz + (y - size / 2) / scale;
+                    const h = Terrain.getHeight(wx, wz);
+
+                    if (h < Terrain.waterLevel) {
+                        ctx.fillStyle = 'rgba(20,60,120,0.8)';
+                    } else if (h < 30) {
+                        ctx.fillStyle = `rgb(40,${80 + h},30)`;
+                    } else if (h < 100) {
+                        ctx.fillStyle = `rgb(${60 + h / 2},${70 + h / 3},40)`;
+                    } else {
+                        ctx.fillStyle = `rgb(${120 + h / 3},${110 + h / 3},${100 + h / 3})`;
+                    }
+                    ctx.fillRect(x, y, 4, 4);
                 }
-                ctx.fillRect(x, y, 4, 4);
             }
+            this.minimapCache = ctx.getImageData(0, 0, size, size);
+            this.minimapLastPx = px;
+            this.minimapLastPz = pz;
+        } else {
+            ctx.putImageData(this.minimapCache, 0, 0);
         }
 
         ctx.save();
@@ -273,6 +290,11 @@ const Game = {
     togglePause() {
         this.paused = !this.paused;
         document.getElementById('pause-overlay').style.display = this.paused ? 'flex' : 'none';
+        if (this.paused && AudioEngine.ctx) {
+            AudioEngine.ctx.suspend();
+        } else if (!this.paused && AudioEngine.ctx) {
+            AudioEngine.ctx.resume();
+        }
     },
 
     quitToMenu() {
@@ -280,6 +302,9 @@ const Game = {
         this.state = 'menu';
         document.getElementById('pause-overlay').style.display = 'none';
         document.getElementById('menu-screen').style.display = 'flex';
+        if (AudioEngine.ctx) {
+            AudioEngine.ctx.suspend();
+        }
     }
 };
 

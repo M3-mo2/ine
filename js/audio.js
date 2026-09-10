@@ -1,4 +1,4 @@
-const Audio = {
+const AudioEngine = {
     ctx: null,
     engineNode: null,
     windNode: null,

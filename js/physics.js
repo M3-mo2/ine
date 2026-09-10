@@ -46,11 +46,13 @@ const Physics = {
         const drag = Vec3.scale(Vec3.normalize(Vec3.scale(state.velocity, -1)), totalDrag);
         const gravity = { x: 0, y: -this.gravity * mass, z: 0 };
 
-        let totalForce = Vec3.add(Vec3.add(Vec3.add(thrust, lift), drag), gravity);
+        let totalForce = Vec3.add(thrust, lift);
+        Vec3.addMut(totalForce, drag);
+        Vec3.addMut(totalForce, gravity);
 
         if (state.gear) {
             const groundDrag = Vec3.scale(Vec3.normalize(Vec3.scale(state.velocity, -1)), trueAirspeed * 15);
-            totalForce = Vec3.add(totalForce, groundDrag);
+            Vec3.addMut(totalForce, groundDrag);
         }
 
         const acceleration = Vec3.scale(totalForce, 1.0 / mass);

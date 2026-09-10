@@ -54,7 +54,7 @@ const Camera = {
                 break;
 
             case 'flyby':
-                const fbAngle = state.heading + Math.PI / 2;
+                const fbAngle = (state.heading + 90) * Math.PI / 180;
                 const fbDist = 100;
                 this.position = Vec3.create(
                     state.position.x + Math.cos(fbAngle) * fbDist,

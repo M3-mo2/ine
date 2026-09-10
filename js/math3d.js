@@ -36,6 +36,14 @@ const Vec3 = {
             z: a.z + (b.z - a.z) * t
         };
     },
+    addMut(a, b) {
+        a.x += b.x; a.y += b.y; a.z += b.z;
+        return a;
+    },
+    scaleMut(v, s) {
+        v.x *= s; v.y *= s; v.z *= s;
+        return v;
+    },
     rotateX(v, angle) {
         const c = Math.cos(angle), s = Math.sin(angle);
         return { x: v.x, y: v.y * c - v.z * s, z: v.y * s + v.z * c };
